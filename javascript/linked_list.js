@@ -1,6 +1,12 @@
 class LinkedList {
   constructor(head = null) {
     this.head = head;
+    this.size = 0;
+    this.tail = null;
+    this.iterate((node) => {
+      this.tail = node;
+      this.size++;
+    });
   }
 
   iterate(callback) {
@@ -24,7 +30,7 @@ class LinkedList {
   // print each node's value on its own line
   // use your iterate method to be DRY! Don't get caught in the code rain, brrr.
   print() {
-    this.iterate(node => console.log(node.value));
+    this.iterate((node) => console.log(node.value));
   }
 
   // find the node with the target value and return it
@@ -32,7 +38,7 @@ class LinkedList {
   find(target) {
     let result = null;
 
-    this.iterate(node => {
+    this.iterate((node) => {
       if (node.value === target) {
         result = node;
 
@@ -47,22 +53,28 @@ class LinkedList {
   addFirst(node) {
     node.next = this.head;
     this.head = node;
+    if (!node.next) this.tail = node;
+    this.size++;
   }
 
   // add node to end of list, no nodes should be removed
   // you may wish to use the iterate method
   addLast(node) {
     if (this.head === null) {
-      this.head = node;
+      this.addFirst(node);
       return;
     }
 
-    this.iterate(currNode => {
-      if (currNode.next === null) {
-        currNode.next = node;
-        return true;
-      }
-    });
+    this.tail.next = node;
+    this.tail = node;
+    this.size++;
+
+    // this.iterate((currNode) => {
+    //   if (currNode.next === null) {
+    //     currNode.next = node;
+    //     return true;
+    //   }
+    // });
   }
 
   // remove the first Node in the list and update head
@@ -70,9 +82,12 @@ class LinkedList {
   removeFirst() {
     const oldHead = this.head;
 
-    if (this.head !== null) {
-      this.head = this.head.next;
+    if (oldHead !== null) {
+      this.head = oldHead.next;
+      this.size--;
     }
+
+    if (this.size === 0) this.tail = null;
 
     return oldHead;
   }
@@ -84,15 +99,18 @@ class LinkedList {
       return this.removeFirst();
     }
 
-    let oldTail = null;
+    let oldTail = this.tail;
 
-    this.iterate(node => {
+    this.iterate((node) => {
       if (node.next.next === null) {
-        oldTail = node.next;
+        //oldTail = node.next;
         node.next = null;
+        this.tail = node;
         return true;
       }
     });
+
+    this.size--;
 
     return oldTail;
   }
@@ -104,6 +122,8 @@ class LinkedList {
       this.addFirst(node);
       return node;
     }
+
+    if (idx === this.size - 1) this.tail = node;
 
     this.iterate((currNode, count) => {
       if (count === idx - 1) {
@@ -125,12 +145,16 @@ class LinkedList {
       return;
     }
 
+    if (idx >= this.size - 1) {
+      this.addLast(node);
+      return;
+    }
     this.iterate((currNode, count) => {
       if (count === idx - 1) {
         const oldNext = currNode.next;
         currNode.next = node;
         node.next = oldNext;
-
+        this.size++;
         return true;
       }
     });
@@ -142,22 +166,27 @@ class LinkedList {
       return this.removeFirst();
     }
 
+    if (idx >= this.size - 1) {
+      return this.removeLast();
+    }
+
     let oldNode = null;
 
     this.iterate((node, count) => {
       if (count === idx - 1) {
         oldNode = node.next;
         node.next = node.next.next;
-
+        this.size--;
         return true;
       }
-    }); 
+    });
 
     return oldNode;
   }
 
   clear() {
     this.head = null;
+    this.size = 0;
   }
 }
 
@@ -169,13 +198,16 @@ class Node {
 }
 
 if (require.main === module) {
-  let head = new Node('one', new Node('two', new Node('three', new Node('four'))));
+  let head = new Node(
+    "one",
+    new Node("two", new Node("three", new Node("four")))
+  );
   let list = new LinkedList(head);
   let emptyList = new LinkedList();
-  let oneItemList = new LinkedList(new Node('just one'));
-
+  let oneItemList = new LinkedList(new Node("just one"));
 }
 
 module.exports = {
-  Node, LinkedList
+  Node,
+  LinkedList,
 };
